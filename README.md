@@ -1,2 +1,0 @@
-# localstack-example
-localstack test
