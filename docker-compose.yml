@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  sqs:
+    container_name: localstack-example-localstack
+    image: localstack/localstack:0.12.8
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - DEFAULT_REGION=ap-northeast-1
+  app:
+    container_name: localstack-example-app
+    build:
+      context: .
+    ports:
+      - "9000:9000"
+    environment:
+      LISTEN_PORT: ":9000"
+    volumes:
+      - ./src/:/go/app
+      - go_dir:/go
+
+volumes:
+  db_data:
+  go_dir:
