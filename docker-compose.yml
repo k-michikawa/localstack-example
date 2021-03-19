@@ -1,26 +1,45 @@
 version: "3.8"
 
+x-var: &REGION
+  "ap-northeast-1"
+
+x-var: &QUEUE_NAME
+  "example"
+
 services:
   sqs:
-    container_name: localstack-example-localstack
     image: localstack/localstack:0.12.8
+    container_name: localstack-example-localstack
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=sqs
-      - DEFAULT_REGION=ap-northeast-1
+      SERVICES: sqs
+      DEFAULT_REGION: *REGION
+      TEST_AWS_ACCOUNT_ID: localstack
+      TEST_SQS_QUEUE_NAME: *QUEUE_NAME
+    volumes:
+      - ./docker/localstack-init.sh:/docker-entrypoint-initaws.d/init.sh
+    # command: /bin/sh -c "mkdir /docker-entrypoint-initaws.d"
+      
   app:
     container_name: localstack-example-app
+    depends_on:
+      - sqs
     build:
-      context: .
+      context: './docker'
+      dockerfile: 'app.Dockerfile'
     ports:
       - "9000:9000"
     environment:
       LISTEN_PORT: ":9000"
+      AWS_REGION: *REGION
+      SQS_QUEUE_NAME: *QUEUE_NAME
+      SQS_ENDPOINT: "http://localstack-example-localstack:4566"
+      AWS_ACCESS_KEY_ID: 'dummy'
+      AWS_SECRET_ACCESS_KEY: 'dummy'
     volumes:
       - ./src/:/go/app
       - go_dir:/go
 
 volumes:
-  db_data:
   go_dir:
